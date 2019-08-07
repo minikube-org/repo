@@ -1,0 +1,16 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: chartmuseum
+  namespace: kube-system
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: \"false\"
+spec:
+  rules:
+  - host: chartmuseum.{{ .Values.wildcard_domain_name }}
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: chartmuseum
+          servicePort: 8080

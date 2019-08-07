@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chartmuseum
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      app: chartmuseum
+  serviceName: chartmuseum
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: chartmuseum
+    spec:
+      terminationGracePeriodSeconds: 10
+
+      containers:
+      - name: chartmuseum
+        image: {{ .Values.chartmuseum_image }}
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+          name: chartmuseum
+        - containerPort: 9001
+          name: supervisord
+
+        securityContext:
+          privileged: true  
+          
+        env:
+          - name: STORAGE
+            value: google
+          - name: STORAGE_GOOGLE_BUCKET
+            value: {{ .Values.storage_google_bucket }}
+          - name: GOOGLE_APPLICATION_CREDENTIALS
+            value: /etc/chartmuseum.json
+
+        volumeMounts:
+        - name: chartmuseum-secret-volume
+          mountPath: /etc/chartmuseum.json
+          subPath: chartmuseum.json
+
+      volumes:
+      - name: chartmuseum-secret-volume
+        secret:
+          secretName: chartmuseum-credentials
+          items:
+          - key: chartmuseum.json
+            path: chartmuseum.json
